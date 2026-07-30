@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ubuntu 운영체제 소개 페이지">
+    <title>Ubuntu 소개 | domain.cloud</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 40px 20px; }
+        .container { max-width: 900px; background: white; margin: 0 auto; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .top-link { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; color: #232f3e; text-decoration: none; font-weight: 700; }
+        .top-link:hover { color: #d35400; text-decoration: underline; }
+        h1 { color: #232f3e; border-bottom: 3px solid #ff9900; padding-bottom: 10px; margin-bottom: 20px; }
+        h2 { color: #1e2832; margin-top: 30px; }
+        .badge { display: inline-block; background: #ff9900; color: white; padding: 5px 12px; border-radius: 20px; font-size: 14px; font-weight: bold; text-transform: uppercase; }
+        p { line-height: 1.7; color: #555; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 15px; border-bottom: 1px solid #ddd; text-align: left; vertical-align: top; }
+        th { background-color: #f8f9fa; color: #232f3e; }
+        .info-box { background: #fdf5e6; padding: 20px; border-left: 5px solid #ff9900; margin-top: 20px; border-radius: 4px; }
+        .highlight { font-weight: bold; color: #d35400; }
+        li { margin: 10px 0; line-height: 1.6; color: #555; }
+        @media (max-width: 640px) {
+            body { padding: 20px 12px; }
+            .container { padding: 24px 20px; }
+            th, td { padding: 12px 10px; }
+        }
+    </style>
+</head>
+<body>
+    <main class="container">
+        <a class="top-link" href="/" aria-label="메인 페이지로 돌아가기">← 메인 페이지로 돌아가기</a>
+
+        <span class="badge">Ubuntu Linux</span>
+        <h1>Ubuntu 소개</h1>
+        <p>Ubuntu는 사용 편의성과 안정성을 바탕으로 데스크톱, 서버, 클라우드 환경에서 폭넓게 활용되는 대표적인 Linux 배포판입니다.</p>
+
+        <h2>주요 특징</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>항목</th>
+                    <th>설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>LTS 지원</strong></td>
+                    <td>장기 지원 버전을 통해 서버와 운영 환경에서 안정적인 업데이트 정책을 제공합니다.</td>
+                </tr>
+                <tr>
+                    <td><strong>APT 패키지 관리</strong></td>
+                    <td><code>apt</code> 명령어를 사용해 소프트웨어 설치, 업데이트, 제거를 간편하게 수행할 수 있습니다.</td>
+                </tr>
+                <tr>
+                    <td><strong>클라우드 친화성</strong></td>
+                    <td>AWS EC2를 비롯한 주요 클라우드 플랫폼에서 공식 이미지와 다양한 자동화 기능을 제공합니다.</td>
+                </tr>
+                <tr>
+                    <td><strong>풍부한 생태계</strong></td>
+                    <td>문서, 커뮤니티, 오픈소스 패키지가 풍부하여 학습과 문제 해결이 비교적 쉽습니다.</td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>megazone 실기 평가</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 40px; }
+        .container { max-width: 1000px; margin: auto; }
+        h1 { text-align: center; color: #333; margin-bottom: 40px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s; }
+        .card:hover { transform: translateY(-5px); }
+        .docker { border-top: 5px solid #007bff; }
+        .ubuntu { border-top: 5px solid #ff9900; }
+        .secrets { border-top: 5px solid #232f3e; }
+        h2 { margin-top: 0; }
+    </style>
+</head>
+<body><!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>megazone 실기 평가</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding-top: 50px; }
+        h1 { color: #232f3e; } /* AWS 색상 */
+    </style>
+</head>
+<body>
+    <h1>이 페이지는 main 페이지 입니다.</h1>
+</body>
+</html>
+
+<div class="container">
+    
+    <div class="grid">
+        <div class="card docker" onclick="location.href='/docker'">
+            <h2 style="color: #007bff;">Docker</h2>
+            <p><strong>Docker</strong><br>Docker 페이지로 이동합니다.</p>
+        </div>
+
+        <div class="card ubuntu" onclick="location.href='/ubuntu'">
+            <h2 style="color: #ff9900;">Ubuntu</h2>
+            <p><strong>Ubuntu</strong><br>Ubuntu 페이지로 이동합니.</p>
+        </div>
+
+        <div class="card secrets" onclick="location.href='/mysql'">
+            <h2 style="color: #232f3e;">mysql</h2>
+            <p><strong>mysql</strong><br>mysql 페이지로 이동합니다.</p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

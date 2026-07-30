@@ -1,0 +1,430 @@
+mz-cloud
+
+실습 - 과제
+4 - 3번째
+
+
+10.0.0.0/24
+
+00000000	00000000	00000000	00000 / 000	/	00000000
+
+VPC : 10.0.0.0/24
+subnet:3개
+private : 1/2
+public : 1/4
+DB : 1/4
+
+여유용량까지 합하여 최소 6개
+
+
+10.0.0.0/27
+
+0~31
+32~63
+64~95
+
+1. 완전 격리형 서브넷 1개만 있는 VPC 생성
+2. 여기에 MySQL 인스턴스 1개를 ASM을 이용해 생성
+3. 기존 VPC의 퍼블릭 서브넷에 있는 인스턴스에서
+	mysql -h host주소 -u ID -p 로 접속 가능하게 구성하시오.
+
+
+	mysql -h hostname -u std20 -p 
+
+
+
+
+1.단순 ping
+2.nginx,보안 그룹
+	엔드포인트 설치 후 nginx 설치, 이후는 ping 과정과 동일하게 진행
+	보안그룹은 Transit gateway만 구성이 잘 되어 있다면 문제없이 진행 가
+
+	1. 1개의 VPC
+2. 3개의 가용영역에 각각 1개씩의 퍼블릭서브넷, 프라이빗서브넷, 데이터베이스 전용 서브넷을 생성합니다.
+- 총 9개의 서브넷
+- 라우팅테이블 총 4개(Default Routing Table 포함)
+- 퍼블릭서브넷의 경우 외부와 송수신이 가능하며 외부에서 들어오는 모든 트래픽을 허용합니다.
+- 라우팅 테이블은 퍼블릭용 1개, 프라이빗용 1개, 데이터베이스용 1개로 구성합니다.
+- 인터넷게이트웨이와 NAT Gateway를 사용합니다.
+- 데이터베이스용 서브넷의 경우 외부(인터넷)와의 통신은 완전히 격리 합니다.
+3. index.html로 구성된 nginx 인스턴스를 생성하고 최소 1대, 유지 2대, 최대 3대를 동일하게 구성(오토스케일 그룹)
+4. 이 오토스케일그룹을 통해 생성된 인스턴스(nginx)에 부하분산 처리를 할 수 있는 단일 진입점을 만듭니다(ALB)
+5. 3개의 버킷을 만들고 각각 서로다른 정적웹사이트를 구성합니다.
+6. 이 정적 웹사이트를 클라우드프론트로 연결하여 클라우드 프론트의 앤드포인트로 구동될 수 있도록 합니다.
+7. MySQL을 인스턴스(1대) 형태로 생성합니다.
+- 보안 암호를 이용합니다.
+- 사용자가 정의한 서브넷 그룹을 사용합니다.
+- 데이터베이스 전용 서브넷에 생성합니다.
+- MySQL에 studydb라는 이름의 데이터베이스를 생성합니다.
+8. Lambda 함수를 이용하여 데이터베이스에 연결합니다.
+- 연결이 성공하면 Success, 실패하면 Failure을 출력합니다.
+- 이때 API Gateway를 이용하여 브라우저에 Success / Failure를 보여줍니다.
+
+
+sudo vi /var/www/html/index.html
+
+std20-subject-http-api
+
+1. 완전 격리형 서브넷 1개만 있는 VPC 생성
+2. 여기에 MySQL 인스턴스 1개를 ASM을 이용해 생성
+3. 기존 VPC의 퍼블릭 서브넷에 있는 인스턴스에서
+	mysql -h host주소 -u ID -p 로 접속 가능하게 구성하시오.
+
+
+	mysql -h hostname -u std20 -p 
+
+
+
+
+07.13
+
+리눅스 CLI 환경에서 AWS 환경구축을 IaC 로 구성
+
+ec2 Instance 는 기본적으로 자신을 통해서 흐르는 통로역할을 하지 못하도록 설정이 되어있다. 그래서 Instance 를 NAT Instance 로 사용할려면 소스/데스트 체크를 설정해주어야 NAT Instance 로 사용 가능하다.
+
+Lamda 업무 자동화. 파고들어서 관심있게 공부하자 (DevOps에 관심이 있다면)
+
+
+07.15
+aws 에서 사용하는 api 제어도구 - boto3
+
+REST API
+GET : 텍스트 형식으로 전송 - Binary 형식(파일) 단위  전송이 불가
+POST : 받은 폼 형식 그대로 전송 (파일까지 포함해서 전송) - 새로고침에 취약(휘발성?),정보가 날아간다.
+
+시크릿 값 추
+
+07.16
+
+Clouf Front - 케싱 역할.(물리적 거리 해소.)
+
+웹 사이트 구성시 로컬에는 path만 지정
+원본은 버킷에 저장하여, 버킷의 이미지를 불러오기만 하면 모든 웹에  적용.
+
+
+07.20
+
+OSI 7계층
+1. pysical : hub,UTP 케이블
+2. data link : switch, MAC
+3. Network : IP
+4. Transport : port
+5. Session : 연결 유지, 장애
+6. Presentation : JPG,PNG
+7. Application : HTTP / HTTPS
+
+7.21
+
+Route53
+인증서 발급
+
+A-B VPC 연결을 할떼,
+기존 실습에서는 특정 서브넷의 cidr 값을 받아왔지만, 일반적으로는 VPC의 cidr 값을 받아온 후, 보안그룹과 NACL을 더 상세히 설정한다.
+
+TGW
+보안 그룹 참조
+	A VPC 에서 B VPC 의 보안그룹을 사용X 활용O 할 수 있다.
+	ASN - 일반적인 VPC 연결에서는 사용하지 않는다.
+	VPN ECMP - 대역폭 늘리기
+	멀티캐스트 - 그룹 동시통신.
+	default 내부망 통신 부분에서, 보안그룹 참조 지원을 하지 않으면 내부망 끼리의 통신에 추가시키지 못하는 경우가 발생한다.
+
+
+TGA
+	어플라이언스 모드
+
+
+JumpBox기법
+ssh -i ~/.ssh/std20-keypair.pem -J ubuntu@pubIp ubuntu@priIp
+
+
+인증서 발급
+	alb - 리전 단위 - 내 리전에서 acm 선택
+
+	글로벌 단위 일 경우 - 버지니아 북부로 이동 후 발
+
+9월중으로 중간평가
+0723 
+실기평가 ~0724 - 1430
+
+# 클라우드 서비스 운영 실기 평가( ~ 7/24 14:30)
+
+VPC  : 10.0.0.0/24
+Pub1 : 10.0.0.0/26
+Pub2 : 10.0.0.64/26
+Pri1 : 10.0.0.128/26
+Pri2 : 10.0.0.192/26
+
+
+### HTML 문서 생성
+
+- www.domain.cloud: 메인 페이지
+    - 중앙에 아래와 같이 3개의 박스 디자인 및 링크
+- www.domain.cloud/ubuntu: 우분투 소개 페이지
+    - 상단에 메인 페이지로 돌아갈 수 있도록 링크
+- www.domain.cloud/mysql: mysql 소개 페이지
+    - 상단에 메인 페이지로 돌아갈 수 있도록 링크
+    - 버튼을 구성하여 클릭하면 람다 함수를 통해 데이터베이스를 연결하고
+    - 연결이 성공하면 Success가 뜰 수 있도록 구성
+    - 람다 함수는 api.domain.cloud로 동작할 수 있도록 구성
+- www.domain.cloud/docker: docker 소개 페이지
+    - 상단에 메인 페이지로 돌아갈 수 있도록 링크
+
+### MySQL
+
+- 데이터베이스 전용 VPC 생성: 완전 격리형
+- 서브넷 그룹 / Secrect Manager / Proxy 사용
+- 다중 AZ DB 클러스터 배포(인스턴스 3개)로 구성
+- 주어진 쿼리문을 통해 데이터베이스 및 테이블 생성 할 것
+
+### www.domain.cloud
+
+- Auto Scaling Group로 서비스
+- 최소 1, 유지 1, 최대 2
+- 새로운 인스턴스 생성시 S3 Bucket에 있는 파일로 서비스 할 수 있도록 구성
+- S3 파일 복사는 AWS 내부 전용선을 이용
+
+### api.domain.cloud
+
+- Lambda
+- 데이터베이스 연결
+- 성공하면 {”status”: “Success”}를 반환
+
+### /ubuntu, /mysql, /docker
+
+- 각각 별도의 S3 Bucket Static Web Site로 구성
+
+### 기타
+
+- https 프로토콜 사용 추가
+
+
+내가 한 사항들 체크리스트
+
+지금까지 된거,
+vpc 그외 기반 사항들 구성 끝
+lambda 및 db연결 및 검증 완
+
+남은 사항들
+프론트 전반
+
+내일 할거
+db cluster 재생성, 및 lambda 환경 변수 수정 
+iam ec2 역할 추가 완료, as 생성할때, iam 권한 추가 후 생성
+
+
+ec2 80번 포트 정상 작동 되면, - V
+이걸로 템플릿 제작하고,  -V
+템플릿 제작하면서 s3 받아오게 만들고,-
+대상그룹 만들고
+alb구성하고
+as구성하고
+alb연결하고
+apigateway 연결하고 cloudfornt 연결하고,
+ssh 인증서 발급해서, https까지
+
+
+s3 엔드포인트를 프라이빗만 적용한 이유
+퍼블릭에서는 인터넷 게이트웨이가있기에 엔드포인트를 쓰지 않아도 접근가능.
+프라이빗에는 통신이 직접적으로 불가능하기에 s3 엔드포인트를 썼다.
+비공개 통신, 빠른 통신
+
+0727	===========================================================
+
+영구 삭제
+
+/ 로 시작하면 절대경로
+./ 로 시작하면 상대경로
+
+ls 옵션
+-a ALL 숨김 파일까지 표시
+-l list? 세부정보 표시
+-R  recursive 하위 디렉토리 출력
+
+
+touch 옵션
+-d 날짜 및 시간
+-t 시간
+
+
+cp 옵션
+-r or -R 디렉토리를 복사할때, 하위 디렉토리도 함께 복사할때
+-i 덮어쓰기
+-f 사용자 요청 없이 실행
+-u update일 경우에만(더 나중에 만들어진 파일 일때만) 복사
+
+mv 옵션
+(-r 옵션 자체는 mv 내에서 기본적으로 포함되어있다.)
+-i 덮어쓰기
+-f 사용자 요청 없이 실행
+
+
+rm 옵션
+-r 디렉토리
+-f 사용자 요청 없이 실행
+
+cat 옵션
+-n 줄번호 표시
+
+	more
+	cat 과 유사하지만, 페이지 별로 텍스트를 볼 수 있다.
+
+	less
+	more 과 유사
+	-N more 문에서 줄 번호가 추가되었다고 생각하면 편하다.
+		
+	head
+	위에서 부터 보여준다.
+	기본적으로 10줄 단위
+	-n 숫자 숫자의 줄 수 만큼 보여준다.
+	
+	tail
+	head 와 반대. 아래에서부터 올라간다.
+
+
+	tee
+	파이프를 통해 전달된 내용을 받아 화면에 출력 및 파일 생성
+	보통 cat의 경우 특정 디렉토리 특정 위치에 파일을 만들려면 권한 문제가발생한다.
+	이 경우 tee 를 사용하는 경우가 많다. 또한 간단한 한두줄의 파일을 만드는 경우 tee 명령어가 효율이 좋다. 
+	
+	
+
+	sed -i 's/바꿀 대상 문구/교체할 문구/g' 디렉토리path
+		- sed 의 경우 자주 사용되기에, 꼭 알아놓자.
+	
+	apt 명령어
+
+	install 에는 업데이트 기능(--only-upgrade) 이 포함되어 있다.
+	보통 패키지 전체 업데이트는 기본 환경 설정 등이 바뀔수도 있기 때문에 지양한다.
+	그렇기에 업데이트 시에는 install 을 이용하여 하나만 바꾼다.
+
+	++dnf
+	
+	remove
+	remove 할 시 패키지가 하나만 딸리는 경우도 있지만, 의존성 패키지가 설치되는 경우도 있기에,
+	보통 remove 후 의존성 패키지를 삭제하는 autoremove 를 꼭 실행시켜준다.
+
+ec2 인스턴스에서 nginx 깔고, 명령어 이용해서 charset + index.html 한글
+
+내일 할 파트
+	패키지 및 마운트.
+	EFS.
+	
+	
+0728	================================================
+
+
+mysql 유저 관리
+1.@'localhost'
+	mysql 이 설치된 위치에서 로그인
+	
+2.@'특정 IP'
+
+
+3.'root'@'%'
+	0.0.0.0/0
+
+fdisk 파티션 나누기
+
+mkfs -t [포멧 유형] 만들려는 파일시스템 path
+
+
+/etc/fstab 에 기본으로 마운트할 fs 추가
+sudo tee -a /etc/fstab <<EOF
+UUID=6601eea7-1bb9-4dd0-9bff-15711cd58299	/mnt/data1	xfs	defaults,nofail	0	2
+UUID=4d9e9a3e-61ba-4254-96a5-454190c3381b	/mnt/data2	xfs	defaults,nofail	0	2
+UUID=079794e2-8c34-4334-851b-0a6d26c29abb	/mnt/data3	xfs	defaults,nofail	0	2
+EOF
+
+파티션 2개
+
+
+sudo tee -a /etc/fstab <<EOF
+UUID=6fcc68df-8ff5-4d11-83fb-73445fbb4189	/mnt/newdt1	xfs	defaults,nofail	0	2
+UUID=3a98b5cc-5a17-4a49-ae1f-ef40ee77d72e	/mnt/newdt2	xfs	defaults,nofail	0	2
+EOF
+
+
+1.파티션 나누기
+sudo fisk /볼륨위치
+
+2. mkfs
+mkfs -t [포멧 유형] /파티션위치
+
+3.lsblk -f
+uuid 확인
+
+4./etc/fstab
+uuid 값과 마운트할 디렉토리값을 fstab에 추가
+sudo tee -a /etc/fstab <<EOF
+UUID=6fcc68df-8ff5-4d11-83fb-73445fbb4189	/mnt/newdt1	xfs	defaults,nofail	0	2
+EOF
+
+5.mount -a
+
+
+
+로그 변경
+sudo sed -i 's|access_log /var/log/nginx/access.log;|access_log /mnt/data1/nginx/log/access.log;|g' /etc/nginx/nginx.conf
+
+
+
+
+0730
+커널
+	통로, OS와 하드웨어간의 중간 저장소
+	
+	
+
+로그는 파티션1
+데이터는 파티션2
+
+
+볼륨2개, nginx, mysql
+python3-pip
+	파이썬에 라이브러리 설치를 지원하는 패키지
+
+python3-venv
+	파이썬을 이용한 가상환경을 개발을 지원하는 패키지
+	
+	
+	
+	
+	
+2.작업 디렉토리 생성
+2-1. 작업 디렉토리 이동
+3.작업 디렉토리를 가상환경으로 구성
+4.가상환경에서 필요한 라이브러리 설치
+5.코딩
+6.실행
+	
+fastapi 라이브러리/ 서비스로 구성해주는 uvicorn
+python3 -m venv .venv
+
+source .venv/bin/activate
+#activate = shell 스크립트
+
+
+
+##
+pip 로 pymysql
+람다 했을때 처럼,
+데이터베이스랑 연결이 되었을때,
+연결되었다고, 화면에 표시되게 하기
+##
+
+
+실습
+fastapi 실습.
+nginx와 mysql을 설치하여.
+nginx에서 fastapi를 이용해 mysql과의 연결을 검증하는 실습.
+이때, fastapi 서비스는 필요할때만 실행시키면, 켤때마다 서비스를 수동으로 실행시켜야한다.
+이를 극복하기위해, 이러한 서비스를 시스템 데몬(systemd)에 등록시켜 자동으로 켜지도록 하여,
+백그라운드에서 작동하도록 만든다.
+
+index.html 과 main.py는 응답 요청과 응답 전송의 경로를 일치시켜야 하고,
+응답 타입 및 메세지도 일관되게, 만들어 준다. 데이터 베이스의 경우, 접속 테스트에 사용할 계정 및 데이터베이스를 미리 만들어 준다.
+참고
+#############
+mz-cloud/07.30
+############
