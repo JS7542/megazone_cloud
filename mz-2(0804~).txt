@@ -93,3 +93,145 @@ mysql> desc tsellinfo;
 참조 2. 고객 정보 들고 올려면 이메일?
 
 
+===================================================================================================
+0806--
+
+
+db 백업
+
+##참조##
+/데이터베이스_백업.pdf
+
+RDS 기준 백업되는 시간은 그리니치 천문대 시간 기준.
+시간 변경이 불가.
+따라서  시간은 DB 시간보다 스크립트로 프로그램 시간으로 설정해주는게 좋다.
+
+
+BACK_FILE="mysql-backup-${DATE}.sql.gz"
+
+mysqldump -u std20 -pmelt7542 std20db | gzip > "/home/ubuntu/${BACK_FILE}"
+
+
+버킷 정책
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "Statement1",
+			"Effect": "Allow",
+			"Action": [
+				"s3:PutObject",
+				"s3:ListBucket"
+			],
+			"Resource": [
+				"arn:aws:s3:::{버킷 이름}",
+				"arn:aws:s3:::{버킷 이름}/*"
+			]
+		}
+	]
+}
+
+
+
+DB_백업 쉘 스크립트
+==================================================================================
+#!/bin/bash
+
+#날짜 포멧
+DATE=$(date +%Y%m%d_%H%M)
+
+#백업 파일명
+BACK_FILE="mysql-backup-${DATE}.sql.gz"
+
+#백업 진행및 용령절약을 위한 압축 진행
+mysqldump -u std20 -pmelt7542 std20db | gzip > "/home/ubuntu/backup/${BACK_FILE}"
+
+#s3 업로드
+aws s3 cp ./backup/${BACK_FILE} s3://std20-mysql-backup-bucket/mysql/
+
+#용량 최적화를 위해 업로드 후 원본 압축파일 삭제
+rm -f ./backup/${BACK_FILE}
+
+=======================================================================================
+
+지금은 실습환경이기에, 경로를 모두 지정하였지만, 실제로 할때에는 가변적인 부분은 변수를 활용하여, 실행할때마다 입력하거나,
+실행전 변수만 수정하게끔 하여야 한다.
+
+수정후 코드
+=======================================================================================
+#!/bin/bash
+
+#DB 및 환경 변수
+#DB_USER=$1
+#DB_PASS=$2									
+#DB_NAME=$3
+DB_USER="std20"
+DB_PASS="melt7542"									# 실제 DB 비밀번호 입력
+DB_NAME="std20db"									# 백업할 데이터베이스명 입력
+BACKUP_DIR="backup"
+BUCKET_NAME="std20-mysql-backup-bucket"				# 백업할 버킷 이름
+BUCKET_DIR="mysql"									# 버킷 내부의 저장 디렉토리 이름
+
+DATE=$(date +%Y%m%d_%H%M)							#날짜 포멧
+
+BACK_FILE="${DB_NAME}-backup-${DATE}.sql.gz"		#백업 파일명
+
+													#백업 진행및 용령절약을 위한 압축 진행
+mysqldump -u ${DB_USER} -p${DB_PASS} ${DB_NAME} | gzip > "/home/ubuntu/${BACKUP_DIR}/${BACK_FILE}"
+
+													#s3 업로드
+aws s3 cp ./${BACKUP_DIR}/${BACK_FILE} s3://${BUCKET_NAME}/${BUCKET_DIR}/
+
+
+rm -f ./${BACKUP_DIR}/${BACK_FILE}					#용량 최적화를 위해 업로드 후 원본 압축파일 삭제
+
+=======================================================================================
+
+
+
+
+강사님 자료
+==================================================================================
+#!/bin/bash
+
+#!/bin/bash
+
+# 사용자 설정 변수
+DB_USER="std20"
+DB_PASS="melt7542"           # 실제 DB 비밀번호 입력
+DB_NAME="std20db"           # 백업할 데이터베이스명 입력
+BACKUP_DIR="/backup"
+BUCKET_NAME="std20-mysql-backup-bucket"  # 백업할 버킷 이름
+BUCKET_DIR="mysql"                   # 버킷 내부의 저장 디렉토리 이름
+
+# 날짜 포맷 정의 (예: 2026-08-06_0000)
+DATE=$(date +%Y-%m-%d_%H%M)
+
+# 백업 파일명 정의
+FILE_NAME="backup-${DB_NAME}-${DATE}.sql.gz"
+
+# 1. MySQL 백업 진행 (압축하여 용량 절약)
+mysqldump -u ${DB_USER} -p${DB_PASS} ${DB_NAME} | gzip > ${BACKUP_DIR}/${FILE_NAME}
+
+# 2. AWS S3 버킷으로 업로드
+aws s3 cp ${BACKUP_DIR}/${FILE_NAME} s3://${BUCKET_NAME}/${BUCKET_DIR}/${FILE_NAME}
+
+# 3. 서버 내부 공간 확보를 위해 로컬에 생성된 임시 백업 파일 삭제
+rm -f ${BACKUP_DIR}/${FILE_NAME}
+
+==============
+crontab 
+
+
+# m h  dom mon dow   command
+
+분 초 일 월 요일 명령어
+ex)
+(1분 마다 명령어 수행이며, 이때 경로는 절대경로여야 한다.)
+* * * * * /home/ubuntu/mysql_backup.sh > /dev/null 2>&1
+
+aws에서 자동화 시킨걸 수동으로 구성하는것.
+
+
+===============
+
