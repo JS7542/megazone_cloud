@@ -148,7 +148,23 @@ INSERT INTO tsellinfo VALUES
 SELECT price,salenum,seldate,(
 	select bookname from tbookinfo 
 	where idx=tsellinfo.book_idx
-),(
+) as bookname,(
 	select user_name from tuserinfo 
 	where mail=tsellinfo.user_mail
-) FROM tsellinfo;
+) as username FROM tsellinfo;
+
+
+drop table std20db.tsellinfo;
+
+
+
+
+
+
+
+
+
+
+
+
+
