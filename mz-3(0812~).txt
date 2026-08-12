@@ -1,0 +1,78 @@
+docker
+
+도커 레포지터리 이용 방안
+1. 도커 허브
+2. ECR
+
+소프트웨어가 하드웨어를 제어할수 있는 관리창?(커널)
+run 옵션
+	-p 옵션 : (포트포워딩)
+	-d 옵션 : 백그라운드에서 동작 가능하게 하는것.
+	--rm : stop시 삭제시키는 옵션 : 보통은 사용하지 않지만, 
+		현재 실습 과정에서는 일일이 삭제시키는것이 번거롭기에 사용
+		
+도커 컨테이너 내부 진입시 root 로 진입한다.따라서 내부작업이 수월하게 가능하다.
+
+docker rm -f $(docker ps -aq)
+	- 도커의 모든 id를 받아와서 삭제한다.
+	
+ps / images 옵션
+
+	-a : 전체
+	-q : id 값
+	-l : 마지막에 실행한 컨테이너
+	-n(Num) : 컨테이너 마지막에 설치된 Num 개의 컨테이너
+
+
+rm - 컨테이너 삭제 / rmi 이미지 삭제
+	rm 옵션은 가능한한 사용하지 않는게 좋다.
+	-v 연결된 볼륨까지 삭제
+	-f 강제 삭제
+	
+	
+pull 태그는 굳이 몰라도 된다.
+사실상 사용할 일이 없고, pull 도 실제로는 거의 사용하지 않는다.
+
+index.html 파일을 안녕하세요로 바꾸고, 한글 입력되게.
+
+
+docker commit my-nginx nginx:1.31.3-custom-v1
+원본 이후 복사할 이름
+
+
+볼륨
+디렉토리 생성후 로컬 디렉토리 연결할 컨테이너 디텍토리 순으로 볼륨을 생성한다.
+
+네트워크 구성
+
+nginx 거쳐서 fastapi로 가는 리버스 프록시
+요즘 아키텍쳐
+
+기본형인 브릿지형으로 생각하면 편하다
+docker network create --subnet 10.0.0.0/24 --ip-range 10.0.0.0/24 --gateway 10.0.0.1 my-network1
+
+
+이 네트워크를 통해 docker run -td --rm --name my-ubuntu1 --net=my-network1 ubuntu:24.04 실행시 ip 대역 내 생기는거 확인
+
+격리형 네트워크는
+--internal 옵션을 통해 만들수 있다.
+
+
+컨테이너로 db 생성시 데이터베이스, 사용자 등을 설치하면서 만들수 있다.
+입력받는 root의 비밀번호 감추기 : read -s ROOT_PASSWORD
+
+docker run -d --name mydb -p 3306:3306 -e MYSQL_ROOT_PASSWORD=$ROOT_PASSWORD \
+mysql:8.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+docker exec -it mydb mysql -u  root -p 
+
+컨테이너 이름뒤에 오는 명령어들은 컨테이너 내부에서 실행할 명령어들이다.
+
+
+fsatapi 생성
+실제 fastapi의 이미지는 파이썬이다.
+
+docker run -d --name my-fastapi -p 8000:8000 -v /home/student/fastapi:/app -w /app \
+python:3.11-slim sh -c "pip install fastapi pymysql uvicorn && uvicorn main:app --host 0.0.0.0 --port 8000 \
+--root-path /app --reload"
+
