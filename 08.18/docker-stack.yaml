@@ -1,0 +1,129 @@
+services:
+
+  # =====================================================
+  # Nginx
+  # =====================================================
+  service-nginx:
+    image: 925047940866.dkr.ecr.ap-east-1.amazonaws.com/bipa17-std20/nginx:v1
+
+    ports:
+      - "80:80"
+
+    deploy:
+      replicas: 2
+
+      placement:
+        constraints:
+          # DB 노드에는 배포 안 됨
+          - node.labels.role == app
+
+          # Manager에도 배포 안 됨
+          - node.role != manager
+
+        # AZ 기준으로 가급적 분산
+        preferences:
+          - spread: node.labels.az
+
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+    networks:
+      - cluster-net
+
+    volumes:
+      - nginx-roots:/usr/share/nginx/html
+      - nginx-logs:/var/log/nginx
+
+
+  # =====================================================
+  # FastAPI
+  # =====================================================
+  app:
+    image: 925047940866.dkr.ecr.ap-east-1.amazonaws.com/bipa17-std20/fastapi:v1
+
+    environment:
+      DB_HOST: mysql-pri
+      DB_PORT: 3306
+      DB_NAME: testdb
+      DB_USER: std20
+      DB_PASSWORD: melt7542
+
+    deploy:
+      replicas: 3
+
+      placement:
+        constraints:
+          # App 전용 worker
+          - node.labels.role == app
+
+          # Manager 금지
+          - node.role != manager
+
+        # 두 AZ로 최대한 분산
+        preferences:
+          - spread: node.labels.az
+
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+    networks:
+      - cluster-net
+
+
+  # =====================================================
+  # MySQL Primary
+  # =====================================================
+  mysql-pri:
+    image: 925047940866.dkr.ecr.ap-east-1.amazonaws.com/bipa17-std20/mysql:v1
+
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: std20
+      MYSQL_PASSWORD: melt7542
+
+    deploy:
+      replicas: 1
+
+      placement:
+        constraints:
+          # DB 전용 Worker에서만 실행
+          - node.labels.role == db
+
+          # Manager 금지
+          - node.role != manager
+
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+    networks:
+      - cluster-net
+
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+
+# ========================================================
+# Overlay Network
+# ========================================================
+networks:
+  cluster-net:
+    driver: overlay
+
+
+# ========================================================
+# Volumes
+# ========================================================
+volumes:
+  nginx-roots:
+  nginx-logs:
+  mysql-data:

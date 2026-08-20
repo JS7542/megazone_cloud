@@ -388,3 +388,9 @@ sudo mysqlrouter --bootstrap std20@10.0.11.201 \
 --account router_user \
 --account-create always \
 --user=root
+
+RDS 와 mysqlCluster 의 장단점
+
+
+SPOF의 지옥
+

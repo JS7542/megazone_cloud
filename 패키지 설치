@@ -1,0 +1,58 @@
+패키지 설치
+# awscli 
+# 1. 필요한 패키지 설치
+sudo apt update
+sudo apt install -y curl unzip
+
+# 2. AWS CLI v2 설치 파일 다운로드
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" \
+  -o "awscliv2.zip"
+
+# 3. 압축 해제
+unzip awscliv2.zip
+
+# 4. 설치
+sudo ./aws/install
+
+# 5. 설치 확인
+aws --version
+
+# 6. 설치후 남은 파일 삭제(삭제)
+rm -rf aws awscliv2.zip
+
+
+
+
+# docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+# --dry-run는 설치 단계를 볼 수 있다.
+sudo sh ./get-docker.sh
+
+# 그룹 권한 설정
+sudo usermod -aG docker $USER
+
+
+# k8s
+# 설치 파일 다운로드.
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+# 실행권한을 줘야 한다.
+chmod +x kubectl
+# 사용자가 일반적으로 명령어를 실행하는 디렉토리로 옮긴다.
+sudo mv kubectl /usr/local/bin
+# 실행 후 버전 확인
+kubectl version
+# CLI 명령어 자동 완성 기능 추가
+source <(kubectl completion bash)
+echo "source <(kubectl completion bash)" >> ~/.bashrc
+
+
+# eks
+
+# 설치 파일 다운로드.
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+
+# 사용자가 일반적으로 명령어를 실행하는 디렉토리로 옮긴다.
+sudo mv /tmp/eksctl /usr/local/bin
+
+# 실행 후 버전 확인
+eksctl version

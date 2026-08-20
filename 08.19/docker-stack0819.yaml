@@ -1,0 +1,90 @@
+services:
+
+  # =========================================================
+  # FastAPI
+  # Worker 노드에 총 3개 배포
+  # =========================================================
+  my-app:
+    image: 925047940866.dkr.ecr.ap-east-1.amazonaws.com/bipa17-std20/fastapi:v2
+
+    environment:
+      DB_HOST: std20-linux-mysql.c1aieog4upxq.ap-east-1.rds.amazonaws.com
+      DB_PORT: "3306"
+      DB_USER: std20
+      DB_PASSWORD: melt7542
+      DB_NAME: STUDY
+      DB_TIMEOUT: "5"
+
+    networks:
+      - backend
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+    deploy:
+      mode: replicated
+      replicas: 3
+
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.role == app
+        preferences:
+          - spread: node.labels.az
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+
+
+  # =========================================================
+  # Nginx
+  # 모든 Worker에 하나씩 배포
+  # ALB가 나중에 각 Worker의 80번 포트로 접근
+  # =========================================================
+  my-web:
+    image: 925047940866.dkr.ecr.ap-east-1.amazonaws.com/bipa17-std20/nginx:v2
+
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+
+    networks:
+      - backend
+
+    deploy:
+      mode: global
+
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.role == app
+
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+
+# ===========================================================
+# Swarm Overlay Network
+# ===========================================================
+networks:
+  backend:
+    driver: overlay
+    attachable: true

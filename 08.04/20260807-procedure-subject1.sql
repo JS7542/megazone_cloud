@@ -27,8 +27,8 @@ END //
 
 DELIMITER ;
 
-CALL call_score(3,@s_name,@kor,@eng,@mat,@sum,@s_avg,@res);
+CALL call_score(1,@s_name,@kor,@eng,@mat,@sum,@s_avg,@res);
 select @s_name AS '이름',@kor AS '국어',
-	@eng AS '영어',@mse_scoreat AS '수학',
+	@eng AS '영어',@mat AS '수학',
 	@sum AS '합계',@s_avg AS '평균',
     @res AS '학점';

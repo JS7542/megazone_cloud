@@ -1,0 +1,86 @@
+services:
+  service-nginx:
+    image: 925047940866.dkr.ecr.ap-east-1.amazonaws.com/bipa17-std20/nginx:v1
+    ports: 
+      - 80:80    # 컨테이너 간의 통신은 내부 포트(오른쪽) 사용
+    deploy:      # Swarm 에서컨테이너의 배포 장식, 자원(리소스),재시작 정책 등을 정의
+      replicas: 2              # 배포할 컨테이너 개수
+      placement:               # 배포 위치 정의
+        constraints:
+          - node.labels.role == app   # 노드중 라벨이 'role'='app' 으로 지정된 노드에 배포
+          - node.role != manager      # 매니저가 아닌 노드에 배포 ,여기서 role 은 내가 지정한 role 이 아닌 태생적 role
+      restart_policy: 
+        condition: on-failure  # 비 정상적인 종료 시에만 재시작, any 정상적인 종료시에도 재시작 
+        delay : 5s             # 재시작 하기전 기다리는 시간
+        max_attempts: 3        # 재시작 시도 횟수
+        window: 120s           # 재시작이 성공 했는지 판단하는 대기 시간
+    networks:
+      - cluster-net
+    volumes:
+      - nginx-roots:/usr/share/nginx/html
+      - nginx-logs:/var/log/nginx
+  
+  app:
+    image: 925047940866.dkr.ecr.ap-east-1.amazonaws.com/bipa17-std20/fastapi:v1
+    ports:
+      - 8000:8000
+      
+    environment:
+      DB_HOST: mysql-pri
+      DB_PORT: 3306
+      DB_NAME: testdb
+      DB_USER: std20
+      DB_PASSWORD: melt7542
+    deploy:      # Swarm 에서컨테이너의 배포 장식, 자원(리소스),재시작 정책 등을 정의
+      replicas: 2              # 배포할 컨테이너 개수
+      placement:               # 배포 위치 정의
+        constraints:
+          - node.labels.role == app   # 노드중 라벨이 'role'='app' 으로 지정된 노드에 배포
+      restart_policy: 
+        condition: on-failure  # 비 정상적인 종료 시에만 재시작, any 정상적인 종료시에도 재시작 
+        delay : 5s             # 재시작 하기전 기다리는 시간
+        max_attempts: 3        # 재시작 시도 횟수
+        window: 120s           # 재시작이 성공 했는지 판단하는 대기 시간
+    networks:
+      - cluster-net
+      
+  
+  mysql-pri:
+    image: 925047940866.dkr.ecr.ap-east-1.amazonaws.com/bipa17-std20/mysql:v1
+    environment:
+      MYSQL_ROOT_PASSWORD: melt7542
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: std20
+      MYSQL_PASSWORD: melt7542
+
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.role == app
+
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+    networks:
+      - cluster-net
+
+    volumes:
+      - mysql-data:/var/lib/mysql
+    
+    
+# ====================================================================================
+# 네트워크 및 볼륨 정의
+# ====================================================================================
+networks:
+  cluster-net:
+    driver: overlay # 두개 이상의 도커 스웜의 노드 내 서비스 이름으로 통신
+    
+    
+volumes:
+  nginx-roots:
+  nginx-logs:
+  mysql-data:

@@ -1,0 +1,138 @@
+0820 =================================================================
+EKS 
+
+기본 환경 구성
+awscli / kubectl / cksctl 설치
+
+aws configure 을 통해 입력된 값은 .aws 내부의 파일 두개에 저장된다.
+
+# k8s
+# 설치 파일
+# 특정 버전 다운로드 : curl -LO "https://dl.k8s.io/release/v1.34.9/bin/linux/amd64/kubectl"
+
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+# 실행권한을 줘야 한다.
+chmod +x kubectl
+# 사용자가 일반적으로 명령어를 실행하는 디렉토리로 옮긴다.
+sudo mv kubectl /usr/local/bin
+# 실행 후 버전 확인
+kubectl version
+
+
+스웜 기준으로 매니저는 마스터이고,
+워커는 노드그룹으로이루어 진다.
+이러한 노드 그룹은 각각이 오토스케일 그룹을 형성한다.
+그리고 필요한 이미지는 스케쥴러 입력되어 실행되는 형식이다.
+말이 워커지 노드 그룹은 노드그룹이고, 스케쥴은 노드 하나 단위.
+
+# eks 생성
+eksctl create cluster --name std20-eks-cluster --region ap-east-1 \
+--nodegroup-name std20-ng-t3 --node-type t3.micro \
+--nodes 2 --nodes-min 1 --nodes-max 3
+
+
+
+# 노드 그룹 확인
+eksctl get nodegroup --cluster std20-eks-cluster
+
+
+보통 eks 를 생성하면, 새로운 vpc를 생성한다.
+하지만, 기존에 있는 vpc를 활용할 경우,
+eks가 서브넷에 원활히 접근 가능하도록 태그값을 붙일 필요가 있다.
+
+TAG 설정
+pub:
+kubernetes.io/role/elb = 1
+kubernetes.io/cluster/[클러스터 이름] = shared
+
+
+pri:
+kubernetes.io/role/internal-elb = 1
+kubernetes.io/cluster/[클러스터 이름] = shared
+
+
+
+
+
+이렇게 사용중인 클러스터에서 노드 확인이 가능하고, 컨테이너를 배포한다면, 이렇게 나온 노드들에 배포된다.
+
+kubectl get node
+
+
+# 실제로는 잘 쓰지 않지만 한번씩 쓸 일이 생기는 코드
+# 클러스터 목록 확인 : 
+	kubectl config get-contexts
+# 현재 사용중인 클러스터
+	kubectl config current-context
+# 클러스터 선택
+	kubectl config use-context <사용할 클러스터 이름>
+# 사용 클러스터 등록
+	aws eks update-kubeconfig --region <리전> --name <클러스터 이름>
+	
+	
+ecr 레포지토리 만들기
+
+aws ecr get-login-password --region <리전명> | docker login --username AWS --password-stdin <aws account>
+
+
+
+
+eks에서 지원하는 이미지인지 확인하는 방법
+
+aws ssm get-parameter \
+  --name /aws/service/eks/optimized-ami/1.30/amazon-linux-2023/x86_64/standard/recommended/image_id \
+  --region ap-east-1 \
+  --query "Parameter.Value" \
+  --output text
+  
+  
+# 레포지토리 로그인
+aws ecr get-login-password --region ap-south-1 | \
+    docker login --username AWS \
+    --password-stdin 626635419731.dkr.ecr.ap-south-1.amazonaws.com
+
+# 보안 스캔이 포함된 레포지토리 생성 (이미지의 취약점을 자동으로 체크)
+aws ecr create-repository \
+    --repository-name std20/ex-repo \
+    --region ap-east-1 \
+    --image-scanning-configuration scanOnPush=true \ # 추가 : 취약점 자동 검사
+    --encryption-configuration encryptionType=AES256 # 저장된 이미지 암호화
+
+# 레포지토리 목록 확인
+aws ecr describe-repositories --region ap-south-1
+
+# 레포지토리 목록만 표로 출력
+aws ecr describe-repositories --query 'repositories[].repositoryName' --output table
+
+
+# 이미지 목록만 간략히 보기
+aws ecr describe-images \
+  --repository-name ian/nginx \
+  --region ap-south-1 \
+  --query 'sort_by(imageDetails, &imagePushedAt)[*].{Tag:imageTags[0], PushedAt:imagePushedAt}' \
+  --output table
+# 이미지 빌드(생성)
+# 이미지 태그생성
+docker tag csjin/nginx:latest 626635419731.dkr.ecr.ap-northeast-1.amazonaws.com/csjin/nginx:latest
+
+# 이미지 푸시(올리기)
+docker push 626635419731.dkr.ecr.ap-northeast-1.amazonaws.com/csjin/nginx:latest
+
+# 이미지 삭제
+aws ecr batch-delete-image \
+    --region ap-northeast-1 \
+    --repository-name csjin/nginx \
+    --image-ids imageTag=latest-aws
+    
+# 이미지가 없는 빈 리포지토리 삭제
+aws ecr delete-repository --repository-name csjin/nginx --region ap-northeast-1
+
+# [주의] 이미지가 들어있는 리포지토리 강제 삭제 (--force)
+aws ecr delete-repository --repository-name csjin/nginx --region ap-northeast-1 --force  
+  
+  
+# ============================================================================
+0820 -
+오전 - 기본적인 명령어
+
+오후 - manifast 를 활용한 인프라 구성.

@@ -37,7 +37,7 @@ END //
 DELIMITER ;
 
 
-CALL put_score('상현',80,90,10,@res);
+CALL put_score('이학',90,90,100,@res);
 select @res;
 
 select * from score;

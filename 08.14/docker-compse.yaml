@@ -1,0 +1,63 @@
+services:
+  my-web:
+    image: smile1101/mynginx:1.31.3-v11
+    pull_policy: if_not_present
+    build:
+      context: ../build/nginx   #Dockerfile 경로
+      dockerfile: Dockerfile    #Dockerfile 이름
+    container_name: my_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - my-backend
+    networks:
+      - frontend-net
+        ipv4_address: 192.168.0.10
+      - backend-net
+    volumes:
+      - shared-data:/var/log/nginx
+      
+  my-backend:
+    image: smile1101/mynginx:fastapi
+    build:
+      context: ../build/fastapi   #Dockerfile 경로
+      dockerfile: Dockerfile    #Dockerfile 이름
+    container_name: my_app
+    restart: unless-stopped
+    environment:
+      DB_HOST: "db.std20.cloud"
+      DB_USER: "std20"
+      DB_PASSWORD: "melt7542"
+      DB_NAME: "testdb"
+    ports:
+      - "8000:8000"
+     
+    networks:
+      - backend-net
+# 네트워크 설정
+networks:
+  frontend-net:
+    driver: bridge
+    ipam:  #네트워크 상세 설정
+      config:
+          - subnet: 10.0.0.0/24
+            ip_range: 10.0.0.0/24
+            gateway: 10.0.0.1
+  backend-net:
+    driver: bridge
+    internal: true  #외부와 격리(유사 프라이빗 서브넷)
+    ipam:  #네트워크 상세 설정
+      config:
+        - subnet: 10.0.1.0/24
+          ip_range: 10.0.1.0/24
+          gateway: 10.0.1.1
+    
+# 불륨 설정
+volumes:
+  shared-data:
+    driver: local # local | efs | ...
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: "/home/student/logs/nginx"

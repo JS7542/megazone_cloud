@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RDS 실습예제</title>
+    <link href="default.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.1.js"></script>
+    <script src="default.js"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Pretendard", "Noto Sans KR", Arial, sans-serif;
+            background: #f5f7fb;
+            color: #1f2937;
+        }
+
+        #container {
+            width: min(1180px, calc(100% - 40px));
+            margin: 48px auto;
+        }
+
+        #container > h1 {
+            margin: 0 0 28px;
+            font-size: clamp(26px, 3vw, 36px);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            color: #111827;
+        }
+
+        #container > h1::after {
+            content: "Student Score Management";
+            display: block;
+            margin-top: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0;
+            color: #94a3b8;
+        }
+
+        #loginBox {
+            display: grid;
+            gap: 24px;
+        }
+
+        #appendForm {
+            padding: 28px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+        }
+
+        #appendForm::before {
+            content: "성적 입력";
+            display: block;
+            margin-bottom: 22px;
+            font-size: 20px;
+            font-weight: 800;
+            color: #111827;
+        }
+
+        #appendForm > div:not(:last-child) {
+            margin-bottom: 14px;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 110px 1fr;
+            gap: 16px;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .row li {
+            min-width: 0;
+            list-style: none;
+        }
+
+        .row label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #475569;
+        }
+
+        select,
+        input[type="number"] {
+            width: 100%;
+            height: 44px;
+            padding: 0 14px;
+            border: 1px solid #dbe2ea;
+            border-radius: 10px;
+            background: #fff;
+            color: #1f2937;
+            font-size: 14px;
+            outline: none;
+            transition: border-color .2s ease, box-shadow .2s ease;
+        }
+
+        select:focus,
+        input[type="number"]:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+        }
+
+        #appendForm .row:first-child .uline:last-child {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px;
+        }
+
+        input[type="button"] {
+            height: 42px;
+            padding: 0 18px;
+            border: 0;
+            border-radius: 10px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+        }
+
+        input[type="button"]:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+        }
+
+        #appendForm > div:last-child {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 24px;
+            padding-top: 22px;
+            border-top: 1px solid #edf0f4;
+        }
+
+        #btnLoding { background: #eef2ff; color: #4338ca; }
+        #btnLogin { background: #4f46e5; color: #fff; }
+        #btnChoEdit { background: #0f766e; color: #fff; }
+        #btnChoDel { background: #fff1f2; color: #be123c; }
+        #btnReload { white-space: nowrap; }
+
+        .viewArea {
+            overflow-x: auto;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+        }
+
+        .viewArea::before {
+            content: "성적 목록";
+            display: block;
+            padding: 24px 24px 18px;
+            font-size: 20px;
+            font-weight: 800;
+            color: #111827;
+        }
+
+        table {
+            width: 100%;
+            min-width: 900px;
+            border-collapse: collapse;
+            background: #fff;
+        }
+
+        thead th {
+            padding: 14px 12px;
+            background: #f8fafc;
+            border-top: 1px solid #edf0f4;
+            border-bottom: 1px solid #e5e7eb;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 700;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        tbody td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            text-align: center;
+            color: #334155;
+            font-size: 14px;
+        }
+
+        tbody tr:hover {
+            background: #fafbff;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #4f46e5;
+            cursor: pointer;
+        }
+
+        @media (max-width: 700px) {
+            #container {
+                width: min(100% - 24px, 1180px);
+                margin: 28px auto;
+            }
+
+            #appendForm { padding: 20px; }
+
+            .row {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            #appendForm .row:first-child .uline:last-child {
+                grid-template-columns: 1fr;
+            }
+
+            #appendForm > div:last-child input[type="button"] {
+                flex: 1 1 calc(50% - 10px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>컨테이너 기반 아키텍처 구현</h1>
+
+        <div id="loginBox">
+            <form id="appendForm">
+                <div>
+                    <ul class="row cl">
+                        <li class="fl uline">
+                            <label for="uid">아이디</label>
+                            <input type="hidden" name="idx" id="idx" value="" />
+                        </li>
+                        <li class="uline">
+                            <select name="uid" id="uid">
+                                <option value="">교육생을 선택하세요</option>
+                            </select>
+                            <input type="button" value="불러오기" id="btnReload" />
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <ul class="row cl">
+                        <li class="fl uline"><label for="kor">국어</label></li>
+                        <li class="uline"><input type="number" name="kor" id="kor" max="100" min="0" value="0" /></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <ul class="row cl">
+                        <li class="fl uline"><label for="eng">영어</label></li>
+                        <li class="uline"><input type="number" name="eng" id="eng" max="100" min="0" value="0" /></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <ul class="row cl">
+                        <li class="fl uline"><label for="mat">수학</label></li>
+                        <li class="uline"><input type="number" name="mat" id="mat" max="100" min="0" value="0" /></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <input type="button" value="성적보기" id="btnLoding" />
+                    <input type="button" value="성적 등록" id="btnLogin" />
+                    <input type="button" value="성적 수정" id="btnChoEdit" />
+                    <input type="button" value="일괄삭제" id="btnChoDel" />
+                </div>
+            </form>
+
+            <form id="viewForm">
+                <div class="viewArea">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="allChecked" /></th>
+                                <th>아이디</th>
+                                <th>이름</th>
+                                <th>성별</th>
+                                <th>국어</th>
+                                <th>영어</th>
+                                <th>수학</th>
+                                <th>총점</th>
+                                <th>평균</th>
+                                <th>평가일</th>
+                                <th>작업</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultArea"></tbody>
+                    </table>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

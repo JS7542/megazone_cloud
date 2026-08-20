@@ -1,0 +1,68 @@
+# pub:
+# kubernetes.io/role/elb = 1
+# kubernetes.io/cluster/std20-eks2-cluster = shared
+
+
+# pri:
+# kubernetes.io/role/internal-elb = 1
+# kubernetes.io/cluster/std20-eks2-cluster = shared
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+
+metadata:   # eks 자체 설정
+  name: std20-linux-eks-cluster
+  region: ap-east-1
+  tags:
+    Class: "bipa17"
+    Owner: "std20"
+
+iam:
+  withOIDC: true   # eks에 생성된 인스턴스들이 AWS 서비스를 사용할 수 있게 함.  
+
+vpc:
+  id: "vpc-0368f37af053b48c7"
+  clusterEndpoints:
+    publicAccess: true
+    privateAccess: true
+#   --이 위까지는 웬만하면 고정값이고, CIDR만 변경하면 됨.
+  subnets:
+    public:
+      ap-east-1a: {id: subnet-042e8d5a1ecbb7d3d}
+      ap-east-1b: {id: subnet-0c26f4cf6b28e78a5}
+      ap-east-1c: {id: subnet-063113eb03ab02923}
+          
+    private:
+      ap-east-1a: {id: subnet-0f2dd8945160e64d9}
+      ap-east-1b: {id: subnet-076272ed25fcbcacb}
+      ap-east-1c: {id: subnet-0dbdc9e03607bd728}
+      
+      
+
+# 노드 그룹 이름, 타입, 갯수, 불륨, AMI(EKS 지원하는 이미지), ssh 설정, 어디(public/private)에 배치할건지
+# 보안그룹, 정책(iam), 
+managedNodeGroups:
+  - name: std20-linux-eks-nodegroup
+    instanceType: t3.small
+    desiredCapacity: 2
+    minSize: 1
+    maxSize: 3
+    volumeSize: 20
+    privateNetworking: true # 프라이빗 서브넷에서만 배포
+    ssh:
+      allow: true
+      publicKeyName: "std20-keypair"
+    securityGroups:
+      attachIDs: ["sg-0c2b1d3134f720916","sg-040f4c1a77895c0d0","sg-096f1a39a47ff83ad"]
+    
+    iam:
+      withAddonPolicies:
+        autoScaler: true    # 컨테이너 이미지 사용 권한
+        imageBuilder: true  # 오토스케일그룹 사용 권한  
+        albIngress: true    # 로드밸런서 사용 권한 정책
+        cloudWatch: true    # 로그 허용을 통한 모니터링 허용 정책
+
+
+
+
+# 생성명령 eksctl create cluster -f ex02-create_eks.yaml
